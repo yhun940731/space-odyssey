@@ -2,6 +2,13 @@
 
 Cosmic Drift is an MVP browser game for endless ambient space flight. It is inspired by the relaxing idea of travelling forever through a changing world, but it is an independent project and does not copy Slow Roads code, assets, or design.
 
+
+## 현재 완성도
+
+현재 저장소는 **전체 25단계 완성본이 아니라, 브라우저에서 우주 비행 MVP를 검증하기 위한 초기 구현본**입니다. 포함된 범위는 프로젝트 규칙, Vite/React/TypeScript 스캐폴딩, 기본 3D 우주 씬, 재사용형 StarField, 비행 상태 store, 키보드 조작, HUD, 배경 행성/성운/소행성, sector theme, 웜홀 상태 머신과 기본 웜홀 시각화입니다.
+
+아직 시작/일시정지 화면, 설정 패널, Web Audio 사운드, postprocessing bloom 튜닝, reduce motion, 모바일 대응, 최종 성능 리뷰는 구현되지 않았습니다. 이 항목들은 이후 단계에서 별도 PR로 추가하는 것이 안전합니다.
+
 ## Features
 
 - Full-screen Vite + React + TypeScript app rendered with `@react-three/fiber`.
