@@ -1,5 +1,6 @@
 import { useEventStore } from '../../stores/useEventStore';
 import { useFlightStore } from '../../stores/useFlightStore';
+import { useGameStore } from '../../stores/useGameStore';
 import { getSectorTheme } from '../../systems/sectorSystem';
 
 export const HUD = () => {
@@ -9,6 +10,7 @@ export const HUD = () => {
   const sector = useFlightStore((state) => state.sector);
   const isWarping = useFlightStore((state) => state.isWarping);
   const wormholeState = useEventStore((state) => state.wormholeState);
+  const status = useGameStore((state) => state.status);
   const theme = getSectorTheme(sector);
 
   return (
@@ -38,11 +40,15 @@ export const HUD = () => {
           <dt>Warp</dt>
           <dd>{isWarping ? 'active' : wormholeState}</dd>
         </div>
+        <div>
+          <dt>Status</dt>
+          <dd>{status}</dd>
+        </div>
       </dl>
       <div className="hud__controls">
         <strong>Controls</strong>
-        <span>WASD / Arrow Keys: steer</span>
-        <span>Q/E: roll</span>
+        <span>Arrow Keys / WASD: turn, climb, dive</span>
+        <span>Q/E: bank roll</span>
         <span>Space/Shift: boost</span>
       </div>
     </aside>

@@ -5,6 +5,11 @@ export const gameplayConfig = {
     warpSpeed: 680,
     accelerationDamping: 2.8,
     steeringDamping: 5.5,
+    driftDamping: 3.8,
+    turnDamping: 5.5,
+    yawTurnRate: 0.82,
+    pitchTurnRate: 0.42,
+    steeringDriftScale: 0.12,
   },
   starField: {
     count: 3000,

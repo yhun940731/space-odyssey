@@ -1,9 +1,20 @@
 export const visualConfig = {
   camera: {
-    normalFov: 75,
-    approachingFov: 85,
-    warpFov: 108,
+    normalFov: 68,
+    approachingFov: 78,
+    warpFov: 102,
     fovDamping: 3.2,
+    followDamping: 4.8,
+    lookDamping: 5.6,
+    thirdPerson: {
+      height: 3.2,
+      distance: 12.5,
+      followX: 0.32,
+      followY: 0.38,
+      lookX: 0.38,
+      lookY: 0.58,
+      lookZ: -18,
+    },
     shake: {
       approaching: 0.018,
       entering: 0.035,
@@ -21,5 +32,17 @@ export const visualConfig = {
     portalZ: -720,
     ringSegments: 96,
     tubeSegments: 12,
+  },
+  playerShip: {
+    z: -18,
+    scale: 1.55,
+    maxStrafeX: 2.6,
+    maxLiftY: 3.1,
+    bankScale: 0.78,
+    rollScale: 0.34,
+    pitchScale: 0.24,
+    yawScale: 0.36,
+    motionDamping: 6.2,
+    rotationDamping: 7.5,
   },
 } as const;

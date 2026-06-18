@@ -2,10 +2,16 @@ import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import { Mesh } from 'three';
 import { useFlightStore } from '../../stores/useFlightStore';
+import { useGameStore } from '../../stores/useGameStore';
+import { advanceFlightPoint } from '../../systems/flightMotion';
 import { gameplayConfig } from '../../systems/gameplayConfig';
 import { createSeededRandom, randomBetween, randomSign } from '../../utils/random';
 
 const config = gameplayConfig.asteroids;
+
+type AsteroidFieldProps = {
+  count?: number;
+};
 
 type AsteroidData = {
   position: [number, number, number];
@@ -29,22 +35,32 @@ const createAsteroid = (seed: number): AsteroidData => {
   };
 };
 
-export const AsteroidField = () => {
+export const AsteroidField = ({ count = config.count }: AsteroidFieldProps) => {
   const refs = useRef<Array<Mesh | null>>([]);
-  const speed = useFlightStore((state) => state.speed);
+  const isRunning = useGameStore((state) => state.status === 'running');
   const asteroids = useMemo(
-    () => Array.from({ length: config.count }, (_, index) => createAsteroid(7200 + index)),
-    [],
+    () => Array.from({ length: count }, (_, index) => createAsteroid(7200 + index)),
+    [count],
   );
 
   useFrame((_, delta) => {
+    if (!isRunning) {
+      return;
+    }
+
+    const flight = useFlightStore.getState();
+
     refs.current.forEach((mesh, index) => {
       if (!mesh) {
         return;
       }
 
       const asteroid = asteroids[index];
-      mesh.position.z += speed * delta * 0.95;
+      advanceFlightPoint(mesh.position, flight, delta, {
+        forwardScale: 0.95,
+        slipScale: 0.06,
+        turnScale: 1.24,
+      });
       mesh.rotation.x += asteroid.rotationSpeed[0] * delta;
       mesh.rotation.y += asteroid.rotationSpeed[1] * delta;
       mesh.rotation.z += asteroid.rotationSpeed[2] * delta;
@@ -53,6 +69,18 @@ export const AsteroidField = () => {
         mesh.position.z = config.zMin - index * 55;
         mesh.position.x *= -1;
         mesh.position.y *= index % 2 === 0 ? 1 : -1;
+      }
+
+      if (mesh.position.x > 880) {
+        mesh.position.x = -820;
+      } else if (mesh.position.x < -880) {
+        mesh.position.x = 820;
+      }
+
+      if (mesh.position.y > 520) {
+        mesh.position.y = -480;
+      } else if (mesh.position.y < -520) {
+        mesh.position.y = 480;
       }
     });
   });

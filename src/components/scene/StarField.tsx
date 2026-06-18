@@ -3,7 +3,10 @@ import { useMemo, useRef } from 'react';
 import { BufferAttribute, BufferGeometry, Color, PointsMaterial } from 'three';
 import { useFlightStore } from '../../stores/useFlightStore';
 import { useEventStore } from '../../stores/useEventStore';
+import { useGameStore } from '../../stores/useGameStore';
+import { useSettingsStore } from '../../stores/useSettingsStore';
 import { gameplayConfig } from '../../systems/gameplayConfig';
+import { advanceFlightBufferPoint } from '../../systems/flightMotion';
 import { getSectorTheme } from '../../systems/sectorSystem';
 import { visualConfig } from '../../systems/visualConfig';
 import { createSeededRandom, randomBetween } from '../../utils/random';
@@ -16,10 +19,11 @@ type StarFieldProps = {
 
 export const StarField = ({ count = config.count }: StarFieldProps) => {
   const materialRef = useRef<PointsMaterial>(null);
-  const speed = useFlightStore((state) => state.speed);
   const sector = useFlightStore((state) => state.sector);
   const isWarping = useFlightStore((state) => state.isWarping);
   const wormholeState = useEventStore((state) => state.wormholeState);
+  const isRunning = useGameStore((state) => state.status === 'running');
+  const reducedMotion = useSettingsStore((state) => state.reducedMotion);
   const theme = getSectorTheme(sector);
 
   const geometry = useMemo(() => {
@@ -49,19 +53,41 @@ export const StarField = ({ count = config.count }: StarFieldProps) => {
   }, [count, theme.starColorA, theme.starColorB]);
 
   useFrame((_, delta) => {
+    if (!isRunning) {
+      return;
+    }
+
+    const flight = useFlightStore.getState();
     const positions = geometry.getAttribute('position') as BufferAttribute;
     const positionArray = positions.array as Float32Array;
-    const warpMultiplier = isWarping || wormholeState !== 'idle' ? 2.4 : 1;
-    const step = delta * speed * warpMultiplier;
+    const warpMultiplier = isWarping || wormholeState !== 'idle' ? (reducedMotion ? 1.25 : 2.4) : 1;
 
     for (let index = 0; index < count; index += 1) {
+      const xIndex = index * 3;
+      const yIndex = xIndex + 1;
       const zIndex = index * 3 + 2;
-      positionArray[zIndex] += step;
+
+      advanceFlightBufferPoint(positionArray, xIndex, flight, delta, {
+        forwardScale: warpMultiplier,
+        slipScale: 0.08,
+        turnScale: 1.25,
+      });
+
+      if (positionArray[xIndex] < -config.xRange) {
+        positionArray[xIndex] = config.xRange;
+      } else if (positionArray[xIndex] > config.xRange) {
+        positionArray[xIndex] = -config.xRange;
+      }
+
+      if (positionArray[yIndex] < -config.yRange) {
+        positionArray[yIndex] = config.yRange;
+      } else if (positionArray[yIndex] > config.yRange) {
+        positionArray[yIndex] = -config.yRange;
+      }
 
       if (positionArray[zIndex] > config.recycleZ) {
-        const xIndex = index * 3;
         positionArray[xIndex] = ((index * 97) % (config.xRange * 2)) - config.xRange;
-        positionArray[xIndex + 1] = ((index * 53) % (config.yRange * 2)) - config.yRange;
+        positionArray[yIndex] = ((index * 53) % (config.yRange * 2)) - config.yRange;
         positionArray[zIndex] = config.zMin;
       }
     }
@@ -69,7 +95,7 @@ export const StarField = ({ count = config.count }: StarFieldProps) => {
     positions.needsUpdate = true;
 
     if (materialRef.current) {
-      const warpAmount = isWarping || wormholeState === 'entering' || wormholeState === 'tunnel' ? 1 : 0;
+      const warpAmount = !reducedMotion && (isWarping || wormholeState === 'entering' || wormholeState === 'tunnel') ? 1 : 0;
       materialRef.current.size = visualConfig.starField.normalSize +
         (visualConfig.starField.warpSize - visualConfig.starField.normalSize) * warpAmount;
       materialRef.current.opacity = visualConfig.starField.normalOpacity +
